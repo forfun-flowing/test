@@ -12,7 +12,8 @@ import { useState } from 'react';
 
 import Spacing from '@/components/Spacing';
 import { BASE_DOMAIN, springTransition } from '@/constants';
-import { cn } from '@/utils';
+import { useDidMount } from '@/hooks/useDidMount';
+import { cn, sendMessageToRN } from '@/utils';
 
 const CAROUSEL_LIST = [
   {
@@ -49,6 +50,13 @@ export default function Login() {
       setSlideIndex((prev) => (prev === 0 ? CAROUSEL_LIST.length - 1 : prev - 1));
     }
   };
+
+  useDidMount(() => {
+    sendMessageToRN({
+      type: 'PERMISSION',
+      payload: 'Request permissions to get camera and album.',
+    });
+  });
 
   return (
     <main className="main-layout">
