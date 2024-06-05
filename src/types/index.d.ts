@@ -27,7 +27,7 @@ type FileValue = {
 };
 
 type MessageType = {
-  type: 'PERMISSION';
+  type: 'PERMISSION' | 'STATUS_BAR';
   payload: any;
 };
 

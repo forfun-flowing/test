@@ -56,6 +56,10 @@ export default function Login() {
       type: 'PERMISSION',
       payload: 'Request permissions to get camera and album.',
     });
+    sendMessageToRN({
+      type: 'STATUS_BAR',
+      payload: '#FBE3EE',
+    });
   });
 
   return (
