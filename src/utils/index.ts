@@ -4,3 +4,6 @@ export * from './token';
 export * from './age';
 export * from './compressImage';
 export * from './sendMessageToRN';
+export * from './getCoordsFromAddress';
+export * from './getEmptyProfile';
+export * from './mbti';

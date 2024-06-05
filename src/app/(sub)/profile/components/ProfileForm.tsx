@@ -1,5 +1,9 @@
 'use client';
 
+import LoadingBox from '@public/lottie/loading-box.json';
+import { useQueryClient } from '@tanstack/react-query';
+import Lottie from 'lottie-react';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import type { SubmitHandler } from 'react-hook-form';
 
@@ -11,6 +15,7 @@ import {
   usePostValueResponse,
 } from '@/apis/profile';
 import { Button, ButtonWrapper } from '@/components/Button';
+import Divider from '@/components/Divider';
 import ProfileCard from '@/components/ProfileCard';
 import Spacing from '@/components/Spacing';
 import TextField from '@/components/TextField';
@@ -24,6 +29,8 @@ import SelfIntro from './SelfIntro';
 import ValueResponseList from './ValueResponseList';
 
 export default function ProfileForm() {
+  const router = useRouter();
+
   const { setValue, watch, handleSubmit } = useProfileContext();
   const fileArrayContext = useFileFieldArrayContext();
   const { fields } = fileArrayContext;
@@ -31,9 +38,10 @@ export default function ProfileForm() {
   const keywords = watch('keywords');
 
   const { data: member } = useGetMember(decodeAccessToken());
-  const { mutate: postProfileImage } = usePostProfileImage();
-  const { mutate: postSelfIntro } = usePostSelfIntro();
-  const { mutate: postValueResponse } = usePostValueResponse();
+  const { mutate: postProfileImage, isPending: isPendingPostProfileImage } = usePostProfileImage();
+  const { mutate: postSelfIntro, isPending: isPendingPostSelfIntro } = usePostSelfIntro();
+  const { mutate: postValueResponse, isPending: isPendingPostValueResponse } =
+    usePostValueResponse();
 
   const { openToast } = useToast();
 
@@ -53,11 +61,10 @@ export default function ProfileForm() {
       postSelfIntro({
         ...member.profile.selfIntro,
         address: member.profile.address,
-        mbti: 'ENFP', // TODO: getMember에 mbti가 없어서 임시
         keywords: keywords.join(','),
       }),
       postValueResponse(valueResponses.map(({ id, response }) => ({ id, response }))),
-    ]);
+    ]).then(() => router.push(`/profile/approved/${decodeAccessToken()}`));
   };
 
   useEffect(() => {
@@ -66,14 +73,30 @@ export default function ProfileForm() {
 
       setValue(
         'valueResponses',
-        member.profile.valueResponses.map(({ id, question, response }) => ({
-          id,
-          question,
-          response,
-        })),
+        member.profile.valueResponses
+          .sort((a, b) => a.id - b.id)
+          .map(({ id, type, question, response }) => ({
+            id,
+            type,
+            question,
+            response,
+          })),
       );
     }
   }, [member]);
+
+  if (isPendingPostProfileImage || isPendingPostSelfIntro || isPendingPostValueResponse) {
+    return (
+      <div className="absolute top-0 flex h-full flex-col items-center justify-center">
+        <Lottie animationData={LoadingBox} />
+        <Spacing size={40} />
+        <p className="text-xl font-bold">프로필 생성중이에요</p>
+        <Spacing size={12} />
+        <p className="text-sm text-gray-500">프로필 생성중이에요!</p>
+        <p className="text-sm text-gray-500">잠시만 기다려주세요!</p>
+      </div>
+    );
+  }
 
   return (
     <form className="px-5" onSubmit={handleSubmit(onSubmit)}>
@@ -90,27 +113,25 @@ export default function ProfileForm() {
       <Spacing size={32} />
       <MyKeyword />
       <Spacing size={32} />
-      <div className="absolute inset-x-0 h-2 w-full bg-gray-100" />
+      <Divider />
       <Spacing size={32} />
       <ValueResponseList
         valueResponses={
-          member?.profile.valueResponses.filter((data) => data.id < 6) as ValueResponse[]
+          member.profile.valueResponses.filter(({ type }) => type === '인생') as ValueResponse[]
         }
         label="라이프 가치관"
       />
       <Spacing size={16} />
       <ValueResponseList
         valueResponses={
-          member?.profile.valueResponses.filter(
-            (data) => data.id > 5 && data.id < 11,
-          ) as ValueResponse[]
+          member.profile.valueResponses.filter(({ type }) => type === '사랑') as ValueResponse[]
         }
         label="연애관"
       />
       <Spacing size={16} />
       <ValueResponseList
         valueResponses={
-          member?.profile.valueResponses.filter((data) => data.id > 10) as ValueResponse[]
+          member.profile.valueResponses.filter(({ type }) => type === '일') as ValueResponse[]
         }
         label="직업 가치관"
       />

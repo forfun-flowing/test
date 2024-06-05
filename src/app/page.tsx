@@ -1,37 +1,35 @@
 'use client';
 
-import FirstImage from '@public/image/onboarding1.png';
-import SecondImage from '@public/image/onboarding2.png';
-import ThirdImage from '@public/image/onboarding3.png';
 import GoogleIcon from '@public/svg/google.svg';
 import KakaoIcon from '@public/svg/kakao.svg';
-import { motion, useMotionValue } from 'framer-motion';
-import Image from 'next/image';
+import { useMotionValue } from 'framer-motion';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import Slider from '@/components/Slider';
 import Spacing from '@/components/Spacing';
-import { BASE_DOMAIN, springTransition } from '@/constants';
+import Video from '@/components/Video';
+import { BASE_DOMAIN } from '@/constants';
 import { useDidMount } from '@/hooks/useDidMount';
-import { cn, sendMessageToRN } from '@/utils';
+import { cn, deleteToken, sendMessageToRN } from '@/utils';
 
 const CAROUSEL_LIST = [
   {
     id: 0,
-    image: FirstImage,
+    src: '/video/onboarding1.mp4',
     title: '내 가치관을 적고\n새로운 이성을 만나보세요',
     description:
       '사진이 아닌, 가치관이 만나는 지점\n플로잉에서 가치관을 통해 진정한 사랑을 찾아보세요',
   },
   {
     id: 1,
-    image: SecondImage,
+    src: '/video/onboarding2.mp4',
     title: '나와 비슷한 가치관을 가진\n 이성과 대화해 보세요!',
     description: '마음에 드는 상대방의 가치관을 확인하고\n대화를 통해 첫 걸음을 내디뎌 보세요',
   },
   {
     id: 2,
-    image: ThirdImage,
+    src: '/video/onboarding3.mp4',
     title: '나와 결이 통하는 순간,\n플로잉에서 경험하세요.',
     description: '마음의 결이 맞을 때, 사랑은 더 깊어집니다.\n플로잉에서 진정한 사랑을 경험하세요.',
   },
@@ -62,30 +60,21 @@ export default function Login() {
     });
   });
 
+  useEffect(() => {
+    deleteToken();
+  }, []);
+
   return (
     <main className="main-layout">
-      <motion.div
-        style={{ x }}
-        draggable
-        drag="x"
-        dragConstraints={{
-          left: 0,
-          right: 0,
-        }}
-        dragElastic={0.2}
-        animate={{ translateX: `-${slideIndex * 100}%` }}
-        {...springTransition}
-        onDragEnd={onDragEnd}
-        className="flex h-2/3 w-full cursor-grab items-center"
-      >
-        {CAROUSEL_LIST.map(({ id, image, title, description }) => (
+      <Slider className="h-2/3 items-center" style={{ x }} index={slideIndex} onDragEnd={onDragEnd}>
+        {CAROUSEL_LIST.map(({ id, src, title, description }) => (
           <div
             className="flex size-full shrink-0 flex-col"
             style={{ left: `${id * 100}%`, right: `${id * 100}%` }}
             key={id}
           >
-            <div className="relative flex size-full flex-[2] items-center justify-center overflow-hidden bg-primary-50">
-              <Image src={image} alt="service" className="size-full object-contain p-10" />
+            <div className="relative flex size-full flex-[2] items-center justify-center overflow-hidden pb-10">
+              <Video src={src} className="w-full object-cover" />
             </div>
             <Spacing size={40} />
             <div className="flex flex-1 flex-col gap-y-4 whitespace-pre-wrap text-center">
@@ -94,7 +83,7 @@ export default function Login() {
             </div>
           </div>
         ))}
-      </motion.div>
+      </Slider>
       <Spacing size={32} />
       <ul className="flex items-center justify-center gap-x-1">
         {CAROUSEL_LIST.map(({ id }) => (
@@ -108,7 +97,7 @@ export default function Login() {
         ))}
       </ul>
       <Spacing size={73} />
-      <div className="fixed inset-x-0 bottom-0 mx-auto mb-5 flex w-full max-w-[430px] flex-col gap-y-2 px-5">
+      <div className="max-width fixed inset-x-0 bottom-0 mx-auto mb-5 flex w-full flex-col gap-y-2 px-5">
         <Spacing size={72} />
         <Link
           href={`https://kauth.kakao.com/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID}&redirect_uri=${BASE_DOMAIN}/auth/kakao&response_type=code`}
